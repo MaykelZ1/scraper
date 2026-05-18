@@ -1,7 +1,7 @@
 const express = require('express');
-const { chromium } = require('playwright-core');
-const cors = require('cors');
 const cheerio = require('cheerio');
+const cors = require('cors');
+const { chromium } = require('playwright-core');
 
 const app = express();
 app.use(cors());
@@ -12,15 +12,11 @@ async function withBrowser(fn) {
   await page.setExtraHTTPHeaders({ "Accept-Language": "es-ES,es;q=0.9" });
   try {
     return await fn(page);
-  } catch (e) {
-    console.error('[withBrowser]', e.message);
-    throw e;
   } finally {
     await browser.close().catch(() => {});
   }
 }
 
-// GET /api/servers?title=Avatar
 app.get('/api/servers', async (req, res) => {
   const title = req.query.title;
   if (!title) return res.status(400).json({ error: 'Falta title' });
@@ -33,7 +29,6 @@ app.get('/api/servers', async (req, res) => {
       const html = await page.content();
       const $ = cheerio.load(html);
 
-      // Extraer primer resultado
       const linkEl = $('article.cc-post a[href*="/peliculas/"]').first() || $('a[href*="/peliculas/"]').first();
       const href = linkEl?.attr('href');
       if (!href) return { servers: [], error: 'Sin resultados' };
@@ -76,7 +71,6 @@ app.get('/api/servers', async (req, res) => {
         if (next && next !== last) { servers.push({ name, url: next, type: 'streaming' }); last = next; }
       }
 
-      // Descargas
       const downloads = await page.evaluate(() => {
         const r = [];
         document.querySelectorAll('a[href*="magnet:"], a[href*="torrent"], a[href*="1fichier"], a[href*="mediafire"], a[href*="mega"], a[href*="megaup"]').forEach(a => {
@@ -104,4 +98,4 @@ app.get('/api/servers', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('OK en puerto', PORT));
+app.listen(PORT, () => console.log('OK puerto', PORT));
