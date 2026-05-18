@@ -1,0 +1,13 @@
+{
+  "name": "allpeliculas-scraper",
+  "version": "1.0",
+  "main": "railway-server.js",
+  "scripts": { "start": "node railway-server.js" },
+  "dependencies": {
+    "express": "^5.2.0",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.6",
+    "playwright": "^1.60.0"
+  },
+  "engines": { "node": ">=18" }
+}
