@@ -1,6 +1,7 @@
 const express = require('express');
 const { chromium } = require('playwright-core');
 const cors = require('cors');
+const cheerio = require('cheerio');
 
 const app = express();
 app.use(cors());
@@ -11,8 +12,11 @@ async function withBrowser(fn) {
   await page.setExtraHTTPHeaders({ "Accept-Language": "es-ES,es;q=0.9" });
   try {
     return await fn(page);
+  } catch (e) {
+    console.error('[withBrowser]', e.message);
+    throw e;
   } finally {
-    await browser.close();
+    await browser.close().catch(() => {});
   }
 }
 
@@ -23,20 +27,19 @@ app.get('/api/servers', async (req, res) => {
 
   try {
     const data = await withBrowser(async (page) => {
-      // Buscar en AllPelículas
-      await page.goto(`https://allpeliculas.la/search/${encodeURIComponent(title)}`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+      await page.goto(`https://allpeliculas.la/search/${encodeURIComponent(title)}`, { waitUntil: 'domcontentloaded', timeout: 25000 });
       await page.waitForTimeout(3000);
 
       const html = await page.content();
-      const $ = require('cheerio').load(html);
+      const $ = cheerio.load(html);
 
       // Extraer primer resultado
       const linkEl = $('article.cc-post a[href*="/peliculas/"]').first() || $('a[href*="/peliculas/"]').first();
       const href = linkEl?.attr('href');
       if (!href) return { servers: [], error: 'Sin resultados' };
 
-      const url = href.startsWith('http') ? href : 'https://allpeliculas.la' + href;
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
+      const detailUrl = href.startsWith('http') ? href : 'https://allpeliculas.la' + href;
+      await page.goto(detailUrl, { waitUntil: 'domcontentloaded', timeout: 25000 });
       await page.waitForTimeout(4000);
 
       const getIframe = () => page.evaluate(() => {
@@ -46,7 +49,7 @@ app.get('/api/servers', async (req, res) => {
 
       const clickAndGet = async (name) => {
         try {
-          await page.click(`button:has-text("${name}")`, { timeout: 3000 });
+          await page.click(`button:has-text("${name}")`, { timeout: 4000 });
           await page.waitForTimeout(2000);
           return getIframe();
         } catch { return null; }
@@ -95,8 +98,10 @@ app.get('/api/servers', async (req, res) => {
 
     res.json(data);
   } catch (e) {
+    console.error('[api/servers]', e.message);
     res.status(500).json({ error: e.message });
   }
 });
 
-app.listen(process.env.PORT || 3000, () => console.log('OK'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log('OK en puerto', PORT));
