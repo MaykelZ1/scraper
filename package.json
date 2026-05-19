@@ -1,13 +1,17 @@
 {
   "name": "allpeliculas-scraper",
-  "version": "1.0",
-  "main": "railway-server.js",
-  "scripts": { "start": "node railway-server.js" },
-  "dependencies": {
-    "express": "^5.2.0",
-    "cheerio": "^1.2.0",
-    "cors": "^2.8.6",
-    "playwright": "^1.60.0"
+  "version": "1.0.0",
+  "description": "Scraper de AllPeliculas para MiStream — despliega como Web Service en Render",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "playwright-core": "^1.49.1"
+  }
 }
